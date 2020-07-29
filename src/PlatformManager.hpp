@@ -36,7 +36,7 @@ void PlatformManager::LampOff()
     digitalWrite(_lampPin, _lampState);
 }
 
-void PlatformManager::Blink(int repeat = 1, int duration = 50)
+void PlatformManager::Blink(int repeat, int duration)
 {
     for (int i = 0; i < repeat; i++)
     {
