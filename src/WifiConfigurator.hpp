@@ -56,6 +56,7 @@ void WifiConfigurator::Setup()
     delay(10);
     if (!(RestoreConfig() && CheckConnection()))
     {
+        Serial.println(F("Running in setup mode"));
         SetupMode();
     }
 

@@ -14,7 +14,10 @@ void setup()
 
 void loop()
 {
-  wifiConfigurator.CheckConnection();
+  if (!wifiConfigurator.CheckConnection())
+  {
+    platformManager.Blink(10, 20);
+  }
   wifiConfigurator.HandleClient();
   webServer.handleClient();
   delay(2000);
