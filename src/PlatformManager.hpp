@@ -16,7 +16,7 @@ public:
     PlatformManager(uint8_t builtinLed, uint8_t lampPin);
     void LampOn();
     void LampOff();
-    void Blink();
+    void Blink(int repeat = 1, int duration = 50);
 };
 
 PlatformManager::PlatformManager(uint8_t builtinLed, uint8_t lampPin)
@@ -36,11 +36,14 @@ void PlatformManager::LampOff()
     digitalWrite(_lampPin, _lampState);
 }
 
-void PlatformManager::Blink()
+void PlatformManager::Blink(int repeat = 1, int duration = 50)
 {
-    digitalWrite(_builtinLed, _lampState);
-    delay(50);
-    digitalWrite(_builtinLed, (_lampState + 1) % 2);
-    delay(10);
+    for (int i = 0; i < repeat; i++)
+    {
+        digitalWrite(_builtinLed, _lampState);
+        delay(duration);
+        digitalWrite(_builtinLed, (_lampState + 1) % 2);
+        delay(duration);
+    }
 }
 #endif
