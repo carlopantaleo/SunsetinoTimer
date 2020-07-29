@@ -11,9 +11,10 @@
 class WifiConfigurator
 {
 private:
+    static const int MAX_CONNECTION_ATTEMPTS = 20;
     const IPAddress _apIP;
     const char *_apSSID = "SunsetinoTimer";
-    boolean _isSetupMode;
+    boolean _isSetupMode = false;
     String _ssidList;
     DNSServer _dnsServer;
     ESP8266WebServer *_webServer;
@@ -34,7 +35,7 @@ public:
     ~WifiConfigurator();
     void Setup();
     void HandleClient();
-    void CheckConnection();
+    bool CheckConnection();
 };
 
 WifiConfigurator::WifiConfigurator(ESP8266WebServer *webServer, PlatformManager *platformManager)
@@ -53,14 +54,8 @@ void WifiConfigurator::Setup()
     Serial.begin(115200);
     EEPROM.begin(512);
     delay(10);
-    if (RestoreConfig())
+    if (!(RestoreConfig() && CheckConnection()))
     {
-        _isSetupMode = false;
-        CheckConnection();
-    }
-    else
-    {
-        _isSetupMode = true;
         SetupMode();
     }
 
@@ -106,14 +101,19 @@ boolean WifiConfigurator::RestoreConfig()
     }
 }
 
-void WifiConfigurator::CheckConnection()
+bool WifiConfigurator::CheckConnection()
 {
-    while (WiFi.status() != WL_CONNECTED)
+    int numAttempts;
+    for (numAttempts = 0;
+         WiFi.status() != WL_CONNECTED && numAttempts < MAX_CONNECTION_ATTEMPTS;
+         numAttempts++)
     {
         delay(250);
         _platformManager->Blink();
         Serial.print(F("."));
     }
+
+    return numAttempts < MAX_CONNECTION_ATTEMPTS;
 }
 
 void WifiConfigurator::ConfigureWebServer()
@@ -205,6 +205,7 @@ void WifiConfigurator::OnReset()
 
 void WifiConfigurator::SetupMode()
 {
+    _isSetupMode = true;
     WiFi.mode(WIFI_STA);
     WiFi.disconnect();
     delay(100);
