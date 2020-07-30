@@ -69,15 +69,15 @@ void wifiHousekeeping(bool forceReset = false)
   if (forceReset)
     lastConnection = millis(); // Force reconnect
 
-  // Connections will be kept alive for 10 minutes, then WiFi will be turned off for power saving.
-  if (millis() - lastConnection < 10 * 60 * 1000)
+  // Connections will be kept alive for 5 minutes, then WiFi will be turned off for power saving.
+  if (millis() - lastConnection < 5 * 60 * 1000)
   {
     // Awake WiFi if it was sleeping
     if (WiFi.getMode() == WIFI_OFF)
     {
       WiFi.forceSleepWake();
       delay(1);
-      WiFi.mode(WIFI_AP_STA);
+      WiFi.mode(WIFI_STA);
       WiFi.begin();
       lastConnection = millis();
     }
@@ -94,8 +94,8 @@ void wifiHousekeeping(bool forceReset = false)
   }
   else
   {
-    // Put WiFi to sleep only if is AP_STA mode
-    if (WiFi.getMode() == WIFI_AP_STA)
+    // Put WiFi to sleep only if in STA mode
+    if (WiFi.getMode() == WIFI_STA)
     {
       WiFi.mode(WIFI_OFF);
       WiFi.forceSleepBegin();
