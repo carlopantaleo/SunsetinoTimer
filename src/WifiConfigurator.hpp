@@ -36,6 +36,7 @@ public:
     void Setup();
     void HandleClient();
     bool CheckConnection();
+    bool IsSetupMode();
 };
 
 WifiConfigurator::WifiConfigurator(ESP8266WebServer *webServer, PlatformManager *platformManager)
@@ -115,6 +116,11 @@ bool WifiConfigurator::CheckConnection()
     }
 
     return numAttempts < MAX_CONNECTION_ATTEMPTS;
+}
+
+bool WifiConfigurator::IsSetupMode()
+{
+    return _isSetupMode;
 }
 
 void WifiConfigurator::ConfigureWebServer()
