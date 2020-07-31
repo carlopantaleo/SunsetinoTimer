@@ -74,7 +74,7 @@ void WifiConfigurator::HandleClient()
 
 boolean WifiConfigurator::RestoreConfig()
 {
-    Serial.println(F("Reading EEPROM..."));
+    Serial.println(F("\nReading EEPROM..."));
     String ssid = "";
     String pass = "";
     if (EEPROM.read(0) != 0)
@@ -129,7 +129,6 @@ void WifiConfigurator::ConfigureWebServer()
     {
         _webServer->on(F("/settings"), [this]() { OnSettings(); });
         _webServer->on(F("/set-ap"), [this]() { OnSetAp(); });
-        _webServer->onNotFound([this]() { OnNotFound(); });
     }
     else
     {
@@ -142,6 +141,8 @@ void WifiConfigurator::ConfigureWebServer()
         });
         _webServer->on(F("/reset"), [this]() { OnReset(); });
     }
+
+    _webServer->onNotFound([this]() { OnNotFound(); });
 }
 
 void WifiConfigurator::OnSettings()
@@ -216,10 +217,10 @@ void WifiConfigurator::SetupMode()
     WiFi.mode(WIFI_STA);
     WiFi.disconnect();
     delay(100);
-    _platformManager->Blink();
+    _platformManager->Blink(50, 10);
     int n = WiFi.scanNetworks();
     delay(100);
-    _platformManager->Blink();
+    _platformManager->Blink(50, 10);
     Serial.println("");
     for (int i = 0; i < n; ++i)
     {
