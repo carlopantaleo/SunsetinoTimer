@@ -7,6 +7,7 @@
 #include <EEPROM.h>
 #include <ESP8266WebServer.h>
 #include "PlatformManager.hpp"
+#include "debug.h"
 
 class WifiConfigurator
 {
@@ -52,12 +53,12 @@ WifiConfigurator::~WifiConfigurator()
 
 void WifiConfigurator::Setup()
 {
-    Serial.begin(115200);
     EEPROM.begin(512);
+    WiFi.mode(WIFI_STA);
     delay(10);
     if (!(RestoreConfig() && CheckConnection()))
     {
-        Serial.println(F("Running in setup mode"));
+        LOGDEBUGLN(F("Running in setup mode"));
         SetupMode();
     }
 
@@ -74,7 +75,7 @@ void WifiConfigurator::HandleClient()
 
 boolean WifiConfigurator::RestoreConfig()
 {
-    Serial.println(F("\nReading EEPROM..."));
+    LOGDEBUGLN(F("\nReading EEPROM..."));
     String ssid = "";
     String pass = "";
     if (EEPROM.read(0) != 0)
@@ -83,22 +84,22 @@ boolean WifiConfigurator::RestoreConfig()
         {
             ssid += char(EEPROM.read(i));
         }
-        Serial.print(F("SSID: "));
-        Serial.println(ssid);
+        LOGDEBUG(F("SSID: "));
+        LOGDEBUGLN(ssid);
         _platformManager->Blink();
         for (int i = 32; i < 96; ++i)
         {
             pass += char(EEPROM.read(i));
         }
-        Serial.print(F("Password: "));
-        Serial.println(pass);
+        LOGDEBUG(F("Password: "));
+        LOGDEBUGLN(pass);
         _platformManager->Blink();
         WiFi.begin(ssid.c_str(), pass.c_str());
         return true;
     }
     else
     {
-        Serial.println(F("Config not found."));
+        LOGDEBUGLN(F("Config not found."));
         return false;
     }
 }
@@ -112,7 +113,7 @@ bool WifiConfigurator::CheckConnection()
     {
         delay(250);
         _platformManager->Blink();
-        Serial.print(F("."));
+        LOGDEBUG(F("."));
     }
 
     return numAttempts < MAX_CONNECTION_ATTEMPTS;
@@ -164,23 +165,23 @@ void WifiConfigurator::OnSetAp()
         EEPROM.write(i, 0);
     }
     String ssid = UrlDecode(_webServer->arg("ssid"));
-    Serial.print(F("SSID: "));
-    Serial.println(ssid);
+    LOGDEBUG(F("SSID: "));
+    LOGDEBUGLN(ssid);
     String pass = UrlDecode(_webServer->arg(F("pass")));
-    Serial.print(F("Password: "));
-    Serial.println(pass);
-    Serial.println(F("Writing SSID to EEPROM..."));
+    LOGDEBUG(F("Password: "));
+    LOGDEBUGLN(pass);
+    LOGDEBUGLN(F("Writing SSID to EEPROM..."));
     for (unsigned int i = 0; i < ssid.length(); ++i)
     {
         EEPROM.write(i, ssid[i]);
     }
-    Serial.println(F("Writing Password to EEPROM..."));
+    LOGDEBUGLN(F("Writing Password to EEPROM..."));
     for (unsigned int i = 0; i < pass.length(); ++i)
     {
         EEPROM.write(32 + i, pass[i]);
     }
     EEPROM.commit();
-    Serial.println(F("Write EEPROM done!"));
+    LOGDEBUGLN(F("Write EEPROM done!"));
     String s = F("<h1>Setup complete.</h1><p>The device will reboot now and will be connected to \"");
     s += ssid;
     s += F("\" after the restart.</p>");
@@ -221,7 +222,7 @@ void WifiConfigurator::SetupMode()
     int n = WiFi.scanNetworks();
     delay(100);
     _platformManager->Blink(50, 10);
-    Serial.println("");
+    LOGDEBUGLN("");
     for (int i = 0; i < n; ++i)
     {
         _ssidList += F("<option value=\"");
@@ -235,9 +236,9 @@ void WifiConfigurator::SetupMode()
     WiFi.softAPConfig(_apIP, _apIP, IPAddress(255, 255, 255, 0));
     WiFi.softAP(_apSSID);
     _dnsServer.start(53, "*", _apIP);
-    Serial.print(F("Starting Access Point at \""));
-    Serial.print(_apSSID);
-    Serial.println("\"");
+    LOGDEBUG(F("Starting Access Point at \""));
+    LOGDEBUG(_apSSID);
+    LOGDEBUGLN("\"");
 }
 
 String WifiConfigurator::MakePage(String title, String contents)

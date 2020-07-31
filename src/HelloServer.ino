@@ -2,8 +2,10 @@
 #include "SunClock.hpp"
 #include <WiFiUdp.h>
 #include "NTPClient.hpp"
+#include "debug.h"
 
-#define NTP_UPDATE_INTERVAL 60*60*1000
+
+#define NTP_UPDATE_INTERVAL 2 * 60 * 1000
 
 WiFiUDP ntpUDP;
 NTPClient timeClient(ntpUDP);
@@ -13,6 +15,7 @@ WifiConfigurator wifiConfigurator(&webServer, &platformManager);
 
 void setup()
 {
+  Serial.begin(115200);
   pinMode(D4, OUTPUT);
   pinMode(D1, OUTPUT);
   wifiConfigurator.Setup();
@@ -57,8 +60,8 @@ void setRiseSetTimes(time_t *rise, time_t *set)
   Sunclock sunclock(44.3316998, 7.4774379); // TODO: retrieve location from EEPROM
   *set = sunclock.sunset(timeClient.getEpochTime());
   *rise = sunclock.sunrise(timeClient.getEpochTime() + 60 * 60 * 24); // Next day sunrise
-  Serial.print(F("Current time (GMT): "));
-  Serial.println(timeClient.getFormattedTime());
+  LOGDEBUG(F("Current time (GMT): "));
+  LOGDEBUGLN(timeClient.getFormattedTime());
   printTime(*set);
   printTime(*rise);
 }
@@ -70,11 +73,12 @@ void wifiHousekeeping(bool forceReset = false)
     lastConnection = millis(); // Force reconnect
 
   // Connections will be kept alive for 5 minutes, then WiFi will be turned off for power saving.
-  if (millis() - lastConnection < 5 * 60 * 1000)
+  if (millis() - lastConnection < 1 * 60 * 1000)
   {
     // Awake WiFi if it was sleeping
     if (WiFi.getMode() == WIFI_OFF)
     {
+      LOGDEBUGLN(F("Waking WiFi up"));
       WiFi.forceSleepWake();
       delay(1);
       WiFi.mode(WIFI_STA);
@@ -84,12 +88,12 @@ void wifiHousekeeping(bool forceReset = false)
 
     if (!wifiConfigurator.CheckConnection())
     {
-      platformManager.Blink(10, 20);
+      platformManager.Blink(10, 50);
       lastConnection = millis(); // Reset last connection timer
     }
     else
     {
-      platformManager.Blink();
+      platformManager.Blink(5);
     }
   }
   else
@@ -97,6 +101,7 @@ void wifiHousekeeping(bool forceReset = false)
     // Put WiFi to sleep only if in STA mode
     if (WiFi.getMode() == WIFI_STA)
     {
+      LOGDEBUGLN(F("Putting WiFi to sleep."));
       WiFi.mode(WIFI_OFF);
       WiFi.forceSleepBegin();
       delay(1);
@@ -119,6 +124,10 @@ void houseKeeping()
     platformManager.Blink(3, 500);
     wifiHousekeeping(true);
   }
+  else
+  {
+    platformManager.Blink();
+  }
 }
 
 /**
@@ -126,9 +135,11 @@ void houseKeeping()
  */
 void printTime(time_t time)
 {
+#ifdef DEBUG
   std::tm *ptm = std::localtime(&time);
   char buffer[32];
   memset(buffer, 0, sizeof(buffer) - 1);
   std::strftime(buffer, 32, "%a, %d.%m.%Y %H:%M:%S (GMT)", ptm);
   Serial.println(buffer);
+#endif
 }
