@@ -1,7 +1,7 @@
 #include "WifiConfigurator.hpp"
 #include "SunClock.hpp"
 #include <WiFiUdp.h>
-#include <NTPClient.h>
+#include "NTPClient.hpp"
 
 #define NTP_UPDATE_INTERVAL 60 * 60 * 1000
 
