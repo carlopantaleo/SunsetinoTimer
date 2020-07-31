@@ -3,7 +3,7 @@
 #include <WiFiUdp.h>
 #include "NTPClient.hpp"
 
-#define NTP_UPDATE_INTERVAL 60 * 60 * 1000
+#define NTP_UPDATE_INTERVAL 60*60*1000
 
 WiFiUDP ntpUDP;
 NTPClient timeClient(ntpUDP);
@@ -19,7 +19,6 @@ void setup()
   webServer.begin();
   timeClient.setUpdateInterval(NTP_UPDATE_INTERVAL);
   timeClient.begin();
-  wifi_set_sleep_type(LIGHT_SLEEP_T);
 }
 
 void loop()
@@ -50,7 +49,7 @@ void loop()
     }
   }
 
-  delay(10000);
+  delay(2000);
 }
 
 void setRiseSetTimes(time_t *rise, time_t *set)
@@ -64,20 +63,50 @@ void setRiseSetTimes(time_t *rise, time_t *set)
   printTime(*rise);
 }
 
-void wifiCheck()
+void wifiHousekeeping(bool forceReset = false)
 {
-  if (!wifiConfigurator.CheckConnection())
+  static unsigned long lastConnection = 0;
+  if (forceReset)
+    lastConnection = millis(); // Force reconnect
+
+  // Connections will be kept alive for 5 minutes, then WiFi will be turned off for power saving.
+  if (millis() - lastConnection < 5 * 60 * 1000)
   {
-    platformManager.Blink(10, 50);
+    // Awake WiFi if it was sleeping
+    if (WiFi.getMode() == WIFI_OFF)
+    {
+      WiFi.forceSleepWake();
+      delay(1);
+      WiFi.mode(WIFI_STA);
+      WiFi.begin();
+      lastConnection = millis();
+    }
+
+    if (!wifiConfigurator.CheckConnection())
+    {
+      platformManager.Blink(10, 20);
+      lastConnection = millis(); // Reset last connection timer
+    }
+    else
+    {
+      platformManager.Blink();
+    }
   }
   else
   {
-    platformManager.Blink(3, 500);
+    // Put WiFi to sleep only if in STA mode
+    if (WiFi.getMode() == WIFI_STA)
+    {
+      WiFi.mode(WIFI_OFF);
+      WiFi.forceSleepBegin();
+      delay(1);
+    }
   }
 }
 
 void houseKeeping()
 {
+  wifiHousekeeping();
   wifiConfigurator.HandleClient();
   webServer.handleClient();
 
@@ -87,7 +116,8 @@ void houseKeeping()
   }
   else if (!timeClient.update())
   {
-    wifiCheck();
+    platformManager.Blink(3, 500);
+    wifiHousekeeping(true);
   }
 }
 
