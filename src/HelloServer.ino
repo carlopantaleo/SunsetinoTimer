@@ -4,7 +4,6 @@
 #include "NTPClient.hpp"
 #include "debug.h"
 
-
 #define NTP_UPDATE_INTERVAL 2 * 60 * 1000
 
 WiFiUDP ntpUDP;
@@ -28,31 +27,35 @@ void loop()
 {
   houseKeeping();
 
-  if (!wifiConfigurator.IsSetupMode()) // Normal operation
+  if (wifiConfigurator.IsSetupMode())
   {
-    static int day = -1;
-    static time_t set, rise;
-
-    // Recalculate rise and set times once a day
-    if (timeClient.getDay() != day)
-    {
-      day = timeClient.getDay();
-      setRiseSetTimes(&rise, &set);
-    }
-
-    // Turn lamp on or off
-    if (timeClient.getEpochTime() > (unsigned)set &&
-        timeClient.getEpochTime() < (unsigned)rise)
-    {
-      platformManager.LampOn();
-    }
-    else
-    {
-      platformManager.LampOff();
-    }
+    delay(500);
+    return;
   }
 
-  delay(2000);
+  // Normal operation
+  static int day = -1;
+  static time_t set, rise;
+
+  // Recalculate rise and set times once a day
+  if (timeClient.getDay() != day)
+  {
+    day = timeClient.getDay();
+    setRiseSetTimes(&rise, &set);
+  }
+
+  // Turn lamp on or off
+  if (timeClient.getEpochTime() > (unsigned)set &&
+      timeClient.getEpochTime() < (unsigned)rise)
+  {
+    platformManager.LampOn();
+  }
+  else
+  {
+    platformManager.LampOff();
+  }
+
+  delay(10000);
 }
 
 void setRiseSetTimes(time_t *rise, time_t *set)
@@ -111,13 +114,12 @@ void wifiHousekeeping(bool forceReset = false)
 
 void houseKeeping()
 {
-  wifiHousekeeping();
   wifiConfigurator.HandleClient();
   webServer.handleClient();
 
   if (wifiConfigurator.IsSetupMode())
   {
-    platformManager.Blink(3);
+    platformManager.Blink(1, 500);
   }
   else if (!timeClient.update())
   {
@@ -126,6 +128,7 @@ void houseKeeping()
   }
   else
   {
+    wifiHousekeeping();
     platformManager.Blink();
   }
 }
