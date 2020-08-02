@@ -1,4 +1,4 @@
-#include "WifiConfigurator.hpp"
+#include "WifiManager.hpp"
 #include "SunClock.hpp"
 #include <WiFiUdp.h>
 #include "NTPClient.hpp"
@@ -10,14 +10,14 @@ WiFiUDP ntpUDP;
 NTPClient timeClient(ntpUDP);
 ESP8266WebServer webServer(80);
 PlatformManager platformManager(D4, D1);
-WifiConfigurator wifiConfigurator(&webServer, &platformManager);
+WifiManager wifiManager(&webServer, &platformManager);
 
 void setup()
 {
   Serial.begin(115200);
   pinMode(D4, OUTPUT);
   pinMode(D1, OUTPUT);
-  wifiConfigurator.Setup();
+  wifiManager.Setup();
   webServer.begin();
   timeClient.setUpdateInterval(NTP_UPDATE_INTERVAL);
   timeClient.begin();
@@ -27,7 +27,7 @@ void loop()
 {
   houseKeeping();
 
-  if (wifiConfigurator.IsSetupMode())
+  if (wifiManager.IsSetupMode())
   {
     delay(500);
     return;
@@ -89,7 +89,7 @@ void wifiHousekeeping(bool forceReset = false)
       lastConnection = millis();
     }
 
-    if (!wifiConfigurator.CheckConnection())
+    if (!wifiManager.CheckConnection())
     {
       platformManager.Blink(10, 50);
       lastConnection = millis(); // Reset last connection timer
@@ -114,10 +114,10 @@ void wifiHousekeeping(bool forceReset = false)
 
 void houseKeeping()
 {
-  wifiConfigurator.HandleClient();
+  wifiManager.HandleClient();
   webServer.handleClient();
 
-  if (wifiConfigurator.IsSetupMode())
+  if (wifiManager.IsSetupMode())
   {
     platformManager.Blink(1, 500);
   }

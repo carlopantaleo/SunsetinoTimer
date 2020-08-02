@@ -1,5 +1,5 @@
-#ifndef WIFICONFIGURATOR_HPP
-#define WIFICONFIGURATOR_HPP
+#ifndef WIFIMANAGER_HPP
+#define WIFIMANAGER_HPP
 
 #include <ESP8266WiFi.h>
 #include <DNSServer.h>
@@ -9,7 +9,7 @@
 #include "PlatformManager.hpp"
 #include "debug.h"
 
-class WifiConfigurator
+class WifiManager
 {
 private:
     static const int MAX_CONNECTION_ATTEMPTS = 20;
@@ -32,26 +32,26 @@ private:
     void OnReset();
 
 public:
-    WifiConfigurator(ESP8266WebServer *webServer, PlatformManager *_platformManager);
-    ~WifiConfigurator();
+    WifiManager(ESP8266WebServer *webServer, PlatformManager *_platformManager);
+    ~WifiManager();
     void Setup();
     void HandleClient();
     bool CheckConnection();
     bool IsSetupMode();
 };
 
-WifiConfigurator::WifiConfigurator(ESP8266WebServer *webServer, PlatformManager *platformManager)
+WifiManager::WifiManager(ESP8266WebServer *webServer, PlatformManager *platformManager)
     : _apIP(192, 168, 1, 1)
 {
     this->_webServer = webServer;
     this->_platformManager = platformManager;
 }
 
-WifiConfigurator::~WifiConfigurator()
+WifiManager::~WifiManager()
 {
 }
 
-void WifiConfigurator::Setup()
+void WifiManager::Setup()
 {
     EEPROM.begin(512);
     WiFi.mode(WIFI_STA);
@@ -65,7 +65,7 @@ void WifiConfigurator::Setup()
     ConfigureWebServer();
 }
 
-void WifiConfigurator::HandleClient()
+void WifiManager::HandleClient()
 {
     if (_isSetupMode)
     {
@@ -73,7 +73,7 @@ void WifiConfigurator::HandleClient()
     }
 }
 
-boolean WifiConfigurator::RestoreConfig()
+boolean WifiManager::RestoreConfig()
 {
     LOGDEBUGLN(F("\nReading EEPROM..."));
     String ssid = "";
@@ -104,7 +104,7 @@ boolean WifiConfigurator::RestoreConfig()
     }
 }
 
-bool WifiConfigurator::CheckConnection()
+bool WifiManager::CheckConnection()
 {
     int numAttempts;
     for (numAttempts = 0;
@@ -119,12 +119,12 @@ bool WifiConfigurator::CheckConnection()
     return numAttempts < MAX_CONNECTION_ATTEMPTS;
 }
 
-bool WifiConfigurator::IsSetupMode()
+bool WifiManager::IsSetupMode()
 {
     return _isSetupMode;
 }
 
-void WifiConfigurator::ConfigureWebServer()
+void WifiManager::ConfigureWebServer()
 {
     if (_isSetupMode)
     {
@@ -146,7 +146,7 @@ void WifiConfigurator::ConfigureWebServer()
     _webServer->onNotFound([this]() { OnNotFound(); });
 }
 
-void WifiConfigurator::OnSettings()
+void WifiManager::OnSettings()
 {
     _platformManager->Blink();
     String s = F("<h1>Wi-Fi Settings</h1><p>Please enter your password by selecting the SSID.</p>");
@@ -157,7 +157,7 @@ void WifiConfigurator::OnSettings()
     _platformManager->Blink();
 }
 
-void WifiConfigurator::OnSetAp()
+void WifiManager::OnSetAp()
 {
     _platformManager->Blink();
     for (int i = 0; i < 96; ++i)
@@ -190,7 +190,7 @@ void WifiConfigurator::OnSetAp()
     ESP.restart();
 }
 
-void WifiConfigurator::OnNotFound()
+void WifiManager::OnNotFound()
 {
     _platformManager->Blink();
     String s = F("<h1>AP mode</h1><p><a href=\"/settings\">Wi-Fi Settings</a></p>");
@@ -198,7 +198,7 @@ void WifiConfigurator::OnNotFound()
     _platformManager->Blink();
 }
 
-void WifiConfigurator::OnReset()
+void WifiManager::OnReset()
 {
     _platformManager->Blink();
     for (int i = 0; i < 96; ++i)
@@ -212,7 +212,7 @@ void WifiConfigurator::OnReset()
     ESP.restart();
 }
 
-void WifiConfigurator::SetupMode()
+void WifiManager::SetupMode()
 {
     _isSetupMode = true;
     WiFi.mode(WIFI_STA);
@@ -241,7 +241,7 @@ void WifiConfigurator::SetupMode()
     LOGDEBUGLN("\"");
 }
 
-String WifiConfigurator::MakePage(String title, String contents)
+String WifiManager::MakePage(String title, String contents)
 {
     String s = F("<!DOCTYPE html><html><head>");
     s += F("<meta name=\"viewport\" content=\"width=device-width,user-scalable=0\">");
@@ -253,7 +253,7 @@ String WifiConfigurator::MakePage(String title, String contents)
     return s;
 }
 
-String WifiConfigurator::UrlDecode(String input)
+String WifiManager::UrlDecode(String input)
 {
     String s = input;
     s.replace(F("%20"), F(" "));
