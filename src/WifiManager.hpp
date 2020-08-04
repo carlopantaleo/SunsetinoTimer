@@ -6,6 +6,7 @@
 #include <WiFiClient.h>
 #include <EEPROM.h>
 #include <ESP8266WebServer.h>
+#include <string>
 #include "PlatformManager.hpp"
 #include "PersistentConfiguration.hpp"
 #include "debug.h"
@@ -29,6 +30,7 @@ private:
     String MakePage(String title, String contents);
     String UrlDecode(String input);
     void OnSettings();
+    void OnSaveSettings();
     void OnSetAp();
     void OnReset();
 
@@ -129,13 +131,7 @@ void WifiManager::ConfigureWebServer()
     }
     else
     {
-        _webServer->on(F("/"), [this]() {
-            // TODO: move logic to general configuration component
-            _platformManager->Blink();
-            String s = F("<h1>STA mode</h1><p><a href=\"/reset\">Reset Wi-Fi Settings</a></p>");
-            _webServer->send(200, F("text/html"), MakePage(F("STA mode"), s));
-            _platformManager->Blink();
-        });
+        _webServer->on(F("/save-settings"), [this]() { OnSaveSettings(); });
         _webServer->on(F("/reset"), [this]() { OnReset(); });
     }
 
@@ -197,13 +193,13 @@ void WifiManager::OnSettings()
     <h4>Coordinates</h4>
     <p>
         <label for="lat" class="label">Latitude</label>
-        <input type="number" name="lng" id="lng" value=")=" +
-                   String(lat) + R"=(">
+        <input type="number" step="any" name="lat" id="lat" value=")=" +
+                   String(lat, 7) + R"=(">
     </p>
     <p>
         <label for="lng" class="label">Longitude</label>
-        <input type="number" name="lng" id="lng" value=")=" +
-                   String(lng) + R"=(">
+        <input type="number" step="any" name="lng" id="lng" value=")=" +
+                   String(lng, 7) + R"=(">
     </p>
     <br/>
 )=" + intervals + R"=(
@@ -232,6 +228,54 @@ void WifiManager::OnSetAp()
     s += ssid;
     s += F("\" after the restart.</p>");
     _webServer->send(200, F("text/html"), MakePage(F("Wi-Fi Settings"), s));
+    _platformManager->Blink();
+    ESP.restart();
+}
+
+void WifiManager::OnSaveSettings()
+{
+    _platformManager->Blink();
+    _persistentConfiguration->SetCoordinates(
+        atof(UrlDecode(_webServer->arg(F("lat"))).c_str()), atof(UrlDecode(_webServer->arg(F("lng"))).c_str()));
+    #ifdef DEBUG
+    float lat, lng;
+    _persistentConfiguration->GetCoordinates(lat, lng);
+    LOGDEBUGLN("Lat: " + String(lat, 7) + "; Lng: " + String(lng, 7))
+    #endif
+
+    for (int i = 0; i < 4; i++)
+    {
+        TimerInterval ti = {0};
+
+        // On
+        String strOn = UrlDecode(_webServer->arg("onTime" + String(i)));
+        TimeType ttOn = static_cast<TimeType>(atoi(UrlDecode(_webServer->arg("onType" + String(i))).c_str()));
+        LOGDEBUGLN("onTime" + String(i) + ": " + strOn)
+        LOGDEBUGLN("onType" + String(i) + ": " + ttOn)
+        if (!strOn.isEmpty() && ttOn == 0)
+        {
+            ti.on.tm_hour = atoi(strOn.substring(0, 2).c_str());
+            ti.on.tm_min = atoi(strOn.substring(3, 5).c_str());
+        }
+        ti.onType = ttOn;
+
+        // Off
+        String strOff = UrlDecode(_webServer->arg("offTime" + String(i)));
+        TimeType ttOff = static_cast<TimeType>(atoi(UrlDecode(_webServer->arg("offType" + String(i))).c_str()));
+        LOGDEBUGLN("offTime" + String(i) + ": " + strOff)
+        LOGDEBUGLN("offType" + String(i) + ": " + ttOff)
+        if (!strOff.isEmpty() && ttOff == 0)
+        {
+            ti.off.tm_hour = atoi(strOff.substring(0, 2).c_str());
+            ti.off.tm_min = atoi(strOff.substring(3, 5).c_str());
+        }
+        ti.offType = ttOff;
+
+        _persistentConfiguration->SetTimerInterval(i, ti);
+    }
+    _persistentConfiguration->SaveConfiguration();
+    String s = F("<h1>Configuration saved.</h1><p>The device is going to reboot now.</p>");
+    _webServer->send(200, F("text/html"), MakePage(F("Configuration saved"), s));
     _platformManager->Blink();
     ESP.restart();
 }

@@ -79,6 +79,12 @@ void PersistentConfiguration::GetCoordinates(float &latitude, float &longitude)
     longitude = _conf.longitude;
 }
 
+void PersistentConfiguration::SetCoordinates(const float &latitude, const float &longitude)
+{
+    _conf.latitude = latitude;
+    _conf.longitude = longitude;
+}
+
 TimerInterval PersistentConfiguration::GetTimerInterval(unsigned int num)
 {
     TimerInterval ti;
