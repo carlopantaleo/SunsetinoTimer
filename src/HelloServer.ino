@@ -75,8 +75,8 @@ void wifiHousekeeping(bool forceReset = false)
   if (forceReset)
     lastConnection = millis(); // Force reconnect
 
-  // Connections will be kept alive for 5 minutes, then WiFi will be turned off for power saving.
-  if (millis() - lastConnection < 1 * 60 * 1000)
+  // Connections will be kept alive for 10 minutes, then WiFi will be turned off for power saving.
+  if (millis() - lastConnection < 10 * 60 * 1000)
   {
     // Awake WiFi if it was sleeping
     if (WiFi.getMode() == WIFI_OFF)
