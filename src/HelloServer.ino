@@ -3,8 +3,7 @@
 #include <WiFiUdp.h>
 #include "NTPClient.hpp"
 #include "debug.h"
-
-#define NTP_UPDATE_INTERVAL 2 * 60 * 1000
+#include "constants.h"
 
 WiFiUDP ntpUDP;
 NTPClient timeClient(ntpUDP);

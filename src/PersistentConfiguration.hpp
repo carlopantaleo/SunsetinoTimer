@@ -4,6 +4,7 @@
 #include <ctime>
 #include <EEPROM.h>
 #include <Arduino.h>
+#include "constants.h"
 
 enum TimeType
 {
@@ -41,7 +42,7 @@ private:
         char password[64 + 1];
         float latitude;
         float longitude;
-        TimerInterval timerIntervals[4];
+        TimerInterval timerIntervals[NUM_INTERVALS];
     } _conf;
 };
 
@@ -88,7 +89,7 @@ void PersistentConfiguration::SetCoordinates(const float &latitude, const float 
 TimerInterval PersistentConfiguration::GetTimerInterval(unsigned int num)
 {
     TimerInterval ti;
-    if (num > 4)
+    if (num > NUM_INTERVALS)
         ti = {0};
     else
         ti = _conf.timerIntervals[num];
@@ -98,7 +99,7 @@ TimerInterval PersistentConfiguration::GetTimerInterval(unsigned int num)
 
 void PersistentConfiguration::SetTimerInterval(unsigned int num, const TimerInterval &timerInterval)
 {
-    if (num > 4)
+    if (num > NUM_INTERVALS)
         return;
     
     _conf.timerIntervals[num] = timerInterval;

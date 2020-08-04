@@ -152,7 +152,7 @@ void WifiManager::OnSettings()
     else
     {
         String intervals = "";
-        for (int i = 0; i < 4; i++)
+        for (int i = 0; i < NUM_INTERVALS; i++)
         {
             TimerInterval intv = _persistentConfiguration->GetTimerInterval(i);
             String strOn = String(intv.on.tm_hour) + ":" + String(intv.on.tm_min);
@@ -243,7 +243,7 @@ void WifiManager::OnSaveSettings()
     LOGDEBUGLN("Lat: " + String(lat, 7) + "; Lng: " + String(lng, 7))
     #endif
 
-    for (int i = 0; i < 4; i++)
+    for (int i = 0; i < NUM_INTERVALS; i++)
     {
         TimerInterval ti = {0};
 
