@@ -32,6 +32,7 @@ public:
     TimerInterval GetTimerInterval(unsigned int num);
     void SetTimerInterval(unsigned int num, const TimerInterval &timerInterval);
     void SaveConfiguration();
+    void Reset();
 
 private:
     struct Conf
@@ -100,6 +101,13 @@ void PersistentConfiguration::SetTimerInterval(unsigned int num, const TimerInte
 void PersistentConfiguration::SaveConfiguration()
 {
     EEPROM.put(0, _conf);
+    EEPROM.commit();
+}
+
+void PersistentConfiguration::Reset()
+{
+    Conf rstConf = {0};
+    EEPROM.put(0, rstConf);
     EEPROM.commit();
 }
 

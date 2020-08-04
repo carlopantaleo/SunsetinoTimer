@@ -193,7 +193,7 @@ void WifiManager::OnSettings()
     }
 </style>
 <h1>Platform settings</h1>
-<form action="http://google.it">
+<form action="save-settings">
     <h4>Coordinates</h4>
     <p>
         <label for="lat" class="label">Latitude</label>
@@ -239,13 +239,9 @@ void WifiManager::OnSetAp()
 void WifiManager::OnReset()
 {
     _platformManager->Blink();
-    for (int i = 0; i < 96; ++i)
-    {
-        EEPROM.write(i, 0);
-    }
-    EEPROM.commit();
-    String s = F("<h1>Wi-Fi settings was reset.</h1><p>The device is going to reboot now.</p>");
-    _webServer->send(200, F("text/html"), MakePage(F("Reset Wi-Fi Settings"), s));
+    _persistentConfiguration->Reset();
+    String s = F("<h1>Platform reset.</h1><p>The device is going to reboot now.</p>");
+    _webServer->send(200, F("text/html"), MakePage(F("Platform reset"), s));
     _platformManager->Blink();
     ESP.restart();
 }
