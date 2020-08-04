@@ -30,7 +30,6 @@ private:
     String UrlDecode(String input);
     void OnSettings();
     void OnSetAp();
-    void OnNotFound();
     void OnReset();
 
 public:
@@ -140,17 +139,79 @@ void WifiManager::ConfigureWebServer()
         _webServer->on(F("/reset"), [this]() { OnReset(); });
     }
 
-    _webServer->onNotFound([this]() { OnNotFound(); });
+    _webServer->onNotFound([this]() { OnSettings(); });
 }
 
 void WifiManager::OnSettings()
 {
     _platformManager->Blink();
-    String s = F("<h1>Wi-Fi Settings</h1><p>Please enter your password by selecting the SSID.</p>");
-    s += F("<form action=\"set-ap\"><label>SSID: </label><select name=\"ssid\">");
-    s += _ssidList;
-    s += F("</select><br>Password: <input name=\"pass\" length=64 type=\"password\"><input type=\"submit\"></form>");
-    _webServer->send(200, F("text/html"), MakePage(F("Wi-Fi Settings"), s));
+    if (_isSetupMode)
+    {
+        String s = F("<h1>Wi-Fi Settings</h1><p>Please enter your password by selecting the SSID.</p>");
+        s += F("<form action=\"set-ap\"><label>SSID: </label><select name=\"ssid\">");
+        s += _ssidList;
+        s += F("</select><br>Password: <input name=\"pass\" length=64 type=\"password\"><input type=\"submit\"></form>");
+        _webServer->send(200, F("text/html"), MakePage(F("Wi-Fi Settings"), s));
+    }
+    else
+    {
+        String intervals = "";
+        for (int i = 0; i < 4; i++)
+        {
+            TimerInterval intv = _persistentConfiguration->GetTimerInterval(i);
+            String strOn = String(intv.on.tm_hour) + ":" + String(intv.on.tm_min);
+            String strOff = String(intv.off.tm_hour) + ":" + String(intv.off.tm_min);
+
+            intervals += "<h4>Interval " + String(i+1) + "</h4>"
+                         "<p>"
+                         "<span class='label'>On</span>"
+                         "<select id='onType" + String(i) + "' name='onType" + String(i) + "'>"
+                         "<option value='0' " + (intv.onType == 0 ? "selected" : "") + ">Specific time</option>"
+                         "<option value='1' " + (intv.onType == 1 ? "selected" : "") + ">Sunrise</option>"
+                         "<option value='2' " + (intv.onType == 2 ? "selected" : "") + ">Sunset</option>"
+                         "</select>"
+                         "<input type='time' id='onTime" + String(i) + "' name='onTime" + String(i) + "' value='" + strOn + "'/>"
+                         "<br/>"
+                         "<span class='label'>Off</span>"
+                         "<select id='offType" + String(i) + "' name='offType" + String(i) + "'>"
+                         "<option value='0' " + (intv.offType == 0 ? "selected" : "") + ">Specific time</option>"
+                         "<option value='1' " + (intv.offType == 1 ? "selected" : "") + ">Sunrise</option>"
+                         "<option value='2' " + (intv.offType == 2 ? "selected" : "") + ">Sunset</option>"
+                         "</select>"
+                         "<input type='time' id='offTime" + String(i) + "' name='offTime" + String(i) + "' value='" + strOff + "'/>"
+                         "</p>"
+                         "<br/>";
+        }
+
+        float lat, lng;
+        _persistentConfiguration->GetCoordinates(lat, lng);
+        String s = R"=(
+<style>
+    .label {
+        display: inline-block;
+        width: 100px;
+    }
+</style>
+<h1>Platform settings</h1>
+<form action="http://google.it">
+    <h4>Coordinates</h4>
+    <p>
+        <label for="lat" class="label">Latitude</label>
+        <input type="number" name="lng" id="lng" value=")=" +
+                   String(lat) + R"=(">
+    </p>
+    <p>
+        <label for="lng" class="label">Longitude</label>
+        <input type="number" name="lng" id="lng" value=")=" +
+                   String(lng) + R"=(">
+    </p>
+    <br/>
+)=" + intervals + R"=(
+    <input type="submit"/>
+</form>
+ )=";
+        _webServer->send(200, F("text/html"), MakePage(F("Platform Settings"), s));
+    }
     _platformManager->Blink();
 }
 
@@ -173,14 +234,6 @@ void WifiManager::OnSetAp()
     _webServer->send(200, F("text/html"), MakePage(F("Wi-Fi Settings"), s));
     _platformManager->Blink();
     ESP.restart();
-}
-
-void WifiManager::OnNotFound()
-{
-    _platformManager->Blink();
-    String s = F("<h1>AP mode</h1><p><a href=\"/settings\">Wi-Fi Settings</a></p>");
-    _webServer->send(200, F("text/html"), MakePage(F("AP mode"), s));
-    _platformManager->Blink();
 }
 
 void WifiManager::OnReset()
