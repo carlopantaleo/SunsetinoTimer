@@ -10,7 +10,8 @@ WiFiUDP ntpUDP;
 NTPClient timeClient(ntpUDP);
 ESP8266WebServer webServer(80);
 PlatformManager platformManager(D4, D1);
-WifiManager wifiManager(&webServer, &platformManager);
+PersistentConfiguration persistentConfiguration;
+WifiManager wifiManager(&webServer, &platformManager, &persistentConfiguration);
 
 void setup()
 {

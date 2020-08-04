@@ -7,6 +7,7 @@
 #include <EEPROM.h>
 #include <ESP8266WebServer.h>
 #include "PlatformManager.hpp"
+#include "PersistentConfiguration.hpp"
 #include "debug.h"
 
 class WifiManager
@@ -18,8 +19,9 @@ private:
     boolean _isSetupMode = false;
     String _ssidList;
     DNSServer _dnsServer;
-    ESP8266WebServer *_webServer;
-    PlatformManager *_platformManager;
+    ESP8266WebServer *const _webServer;
+    PlatformManager *const _platformManager;
+    PersistentConfiguration *const _persistentConfiguration;
 
     boolean RestoreConfig();
     void ConfigureWebServer();
@@ -32,7 +34,9 @@ private:
     void OnReset();
 
 public:
-    WifiManager(ESP8266WebServer *webServer, PlatformManager *_platformManager);
+    WifiManager(ESP8266WebServer *webServer,
+                PlatformManager *platformManager,
+                PersistentConfiguration *persistentConfiguration);
     ~WifiManager();
     void Setup();
     void HandleClient();
@@ -40,11 +44,14 @@ public:
     bool IsSetupMode();
 };
 
-WifiManager::WifiManager(ESP8266WebServer *webServer, PlatformManager *platformManager)
-    : _apIP(192, 168, 1, 1)
+WifiManager::WifiManager(ESP8266WebServer *webServer,
+                         PlatformManager *platformManager,
+                         PersistentConfiguration *persistentConfiguration)
+    : _apIP(192, 168, 1, 1),
+      _webServer(webServer),
+      _platformManager(platformManager),
+      _persistentConfiguration(persistentConfiguration)
 {
-    this->_webServer = webServer;
-    this->_platformManager = platformManager;
 }
 
 WifiManager::~WifiManager()
@@ -76,24 +83,14 @@ void WifiManager::HandleClient()
 boolean WifiManager::RestoreConfig()
 {
     LOGDEBUGLN(F("\nReading EEPROM..."));
-    String ssid = "";
-    String pass = "";
-    if (EEPROM.read(0) != 0)
+    String ssid = _persistentConfiguration->GetSSID();
+    String pass = _persistentConfiguration->GetPassword();
+    if (!ssid.isEmpty())
     {
-        for (int i = 0; i < 32; ++i)
-        {
-            ssid += char(EEPROM.read(i));
-        }
         LOGDEBUG(F("SSID: "));
         LOGDEBUGLN(ssid);
-        _platformManager->Blink();
-        for (int i = 32; i < 96; ++i)
-        {
-            pass += char(EEPROM.read(i));
-        }
         LOGDEBUG(F("Password: "));
         LOGDEBUGLN(pass);
-        _platformManager->Blink();
         WiFi.begin(ssid.c_str(), pass.c_str());
         return true;
     }
@@ -150,7 +147,7 @@ void WifiManager::OnSettings()
 {
     _platformManager->Blink();
     String s = F("<h1>Wi-Fi Settings</h1><p>Please enter your password by selecting the SSID.</p>");
-    s += F("<form method=\"get\" action=\"set-ap\"><label>SSID: </label><select name=\"ssid\">");
+    s += F("<form action=\"set-ap\"><label>SSID: </label><select name=\"ssid\">");
     s += _ssidList;
     s += F("</select><br>Password: <input name=\"pass\" length=64 type=\"password\"><input type=\"submit\"></form>");
     _webServer->send(200, F("text/html"), MakePage(F("Wi-Fi Settings"), s));
@@ -160,28 +157,16 @@ void WifiManager::OnSettings()
 void WifiManager::OnSetAp()
 {
     _platformManager->Blink();
-    for (int i = 0; i < 96; ++i)
-    {
-        EEPROM.write(i, 0);
-    }
-    String ssid = UrlDecode(_webServer->arg("ssid"));
+    String ssid = UrlDecode(_webServer->arg(F("ssid")));
     LOGDEBUG(F("SSID: "));
     LOGDEBUGLN(ssid);
     String pass = UrlDecode(_webServer->arg(F("pass")));
     LOGDEBUG(F("Password: "));
     LOGDEBUGLN(pass);
-    LOGDEBUGLN(F("Writing SSID to EEPROM..."));
-    for (unsigned int i = 0; i < ssid.length(); ++i)
-    {
-        EEPROM.write(i, ssid[i]);
-    }
-    LOGDEBUGLN(F("Writing Password to EEPROM..."));
-    for (unsigned int i = 0; i < pass.length(); ++i)
-    {
-        EEPROM.write(32 + i, pass[i]);
-    }
-    EEPROM.commit();
-    LOGDEBUGLN(F("Write EEPROM done!"));
+    LOGDEBUGLN(F("Saving configuration..."));
+    _persistentConfiguration->SetSSID(ssid);
+    _persistentConfiguration->SetPassword(pass);
+    _persistentConfiguration->SaveConfiguration();
     String s = F("<h1>Setup complete.</h1><p>The device will reboot now and will be connected to \"");
     s += ssid;
     s += F("\" after the restart.</p>");
