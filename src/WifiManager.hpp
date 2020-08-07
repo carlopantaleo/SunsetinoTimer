@@ -9,6 +9,7 @@
 #include <string>
 #include "PlatformManager.hpp"
 #include "PersistentConfiguration.hpp"
+#include "NTPClient.hpp"
 #include "debug.h"
 
 class WifiManager
@@ -23,6 +24,7 @@ private:
     ESP8266WebServer *const _webServer;
     PlatformManager *const _platformManager;
     PersistentConfiguration *const _persistentConfiguration;
+    NTPClient *const _timeClient;
 
     boolean RestoreConfig();
     void ConfigureWebServer();
@@ -37,7 +39,8 @@ private:
 public:
     WifiManager(ESP8266WebServer *webServer,
                 PlatformManager *platformManager,
-                PersistentConfiguration *persistentConfiguration);
+                PersistentConfiguration *persistentConfiguration,
+                NTPClient *timeClient);
     ~WifiManager();
     void Setup();
     void HandleClient();
@@ -47,11 +50,13 @@ public:
 
 WifiManager::WifiManager(ESP8266WebServer *webServer,
                          PlatformManager *platformManager,
-                         PersistentConfiguration *persistentConfiguration)
+                         PersistentConfiguration *persistentConfiguration,
+                         NTPClient *timeClient)
     : _apIP(192, 168, 1, 1),
       _webServer(webServer),
       _platformManager(platformManager),
-      _persistentConfiguration(persistentConfiguration)
+      _persistentConfiguration(persistentConfiguration),
+      _timeClient(timeClient)
 {
 }
 
@@ -189,6 +194,7 @@ void WifiManager::OnSettings()
     }
 </style>
 <h1>Platform settings</h1>
+<p>Current time: )=" + _timeClient->getFormattedTime() + R"=(</p>
 <form action="save-settings">
     <h4>Coordinates</h4>
     <p>

@@ -6,12 +6,13 @@
 #include <Arduino.h>
 #include "constants.h"
 
-enum TimeType
+enum TimeType 
 {
     EXACT,
     SUNRISE,
     SUNSET
 };
+
 typedef struct
 {
     std::tm on;
