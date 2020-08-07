@@ -10,7 +10,7 @@ NTPClient timeClient(ntpUDP);
 ESP8266WebServer webServer(80);
 PlatformManager platformManager(D4, D1);
 PersistentConfiguration persistentConfiguration;
-WifiManager wifiManager(&webServer, &platformManager, &persistentConfiguration);
+WifiManager wifiManager(&webServer, &platformManager, &persistentConfiguration, &timeClient);
 
 void setup()
 {
@@ -41,32 +41,77 @@ void loop()
   if (timeClient.getDay() != day)
   {
     day = timeClient.getDay();
-    setRiseSetTimes(&rise, &set);
+    setRiseSetTimes(rise, set);
   }
 
-  // Turn lamp on or off
-  if (timeClient.getEpochTime() > (unsigned)set &&
-      timeClient.getEpochTime() < (unsigned)rise)
-  {
-    platformManager.LampOn();
-  }
-  else
-  {
-    platformManager.LampOff();
-  }
+  manageLamp(rise, set);
 
   delay(10000);
 }
 
-void setRiseSetTimes(time_t *rise, time_t *set)
+std::tm getTime(const TimeType &type, const time_t &rise, const time_t &set, const std::tm &exactTime)
+{
+  switch (type)
+  {
+  case SUNRISE:
+    return *std::localtime(&rise);
+  case SUNSET:
+    return *std::localtime(&set);
+  default:
+    return exactTime;
+  }
+}
+
+int compareTimes(const std::tm &time1, const std::tm &time2)
+{
+  if (time1.tm_hour > time2.tm_hour && time1.tm_min > time2.tm_min)
+    return 1;
+  else if (time1.tm_hour < time2.tm_hour && time1.tm_min < time2.tm_min)
+    return -1;
+  else
+    return 0;
+}
+
+void manageLamp(time_t &rise, time_t &set)
+{
+  for (int i = 0; i < NUM_INTERVALS; i++)
+  {
+    TimerInterval ti = persistentConfiguration.GetTimerInterval(i);
+    std::tm on = getTime(ti.onType, rise, set, ti.on);
+    std::tm off = getTime(ti.offType, rise, set, ti.off);
+    std::tm now;
+    now.tm_min = timeClient.getMinutes();
+    now.tm_hour = timeClient.getHours();
+
+    // Adjust intervals intersecting midnight (valid only for exact times)
+    if (ti.onType == EXACT && ti.offType == EXACT && compareTimes(on, off) < 0)
+    {
+      if (compareTimes(now, on) >= 0)
+      {
+        off.tm_min = 59;
+        off.tm_hour = 23;
+      }
+      else if (compareTimes(now, off) <= 0)
+        on = {0};
+    }
+
+    // Turn light on or off
+    if (compareTimes(now, on) >= 0 && compareTimes(now, off) <= 0)
+      platformManager.LampOn();
+    else
+      platformManager.LampOff();
+  }
+}
+
+void setRiseSetTimes(time_t &rise, time_t &set)
 {
   Sunclock sunclock(44.3316998, 7.4774379); // TODO: retrieve location from EEPROM
-  *set = sunclock.sunset(timeClient.getEpochTime());
-  *rise = sunclock.sunrise(timeClient.getEpochTime() + 60 * 60 * 24); // Next day sunrise
+  set = sunclock.sunset(timeClient.getEpochTime());
+  rise = sunclock.sunrise(timeClient.getEpochTime());
   LOGDEBUG(F("Current time (GMT): "));
   LOGDEBUGLN(timeClient.getFormattedTime());
-  printTime(*set);
-  printTime(*rise);
+  printTime(set);
+  printTime(rise);
 }
 
 void wifiHousekeeping(bool forceReset = false)
