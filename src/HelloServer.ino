@@ -87,21 +87,23 @@ void manageLamp(time_t &rise, time_t &set)
     now.tm_hour = timeClient.getHours();
 
     // Adjust intervals intersecting midnight (valid only for exact times)
-    if (ti.onType == EXACT && ti.offType == EXACT && compareTimes(on, off) > 0)
+    if (((ti.onType == EXACT && ti.offType == EXACT) ||
+         (ti.onType == SUNSET && ti.offType == EXACT)) &&
+        compareTimes(on, off) > 0)
     {
       if (compareTimes(now, on) >= 0)
       {
         off.tm_min = 59;
         off.tm_hour = 23;
       }
-      else if (compareTimes(now, off) <= 0)
+      else
         on = {0};
 
-      #ifdef DEBUG
+#ifdef DEBUG
       char str[64];
       sprintf(str, "Adj times - on: %d:%d, off: %d:%d", on.tm_hour, on.tm_min, off.tm_hour, off.tm_min);
       LOGDEBUGLN(str);
-      #endif
+#endif
     }
 
     // Turn light on or off
