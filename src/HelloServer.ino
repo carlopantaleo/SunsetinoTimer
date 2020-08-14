@@ -98,12 +98,6 @@ void manageLamp(time_t &rise, time_t &set)
       }
       else
         on = {0};
-
-#ifdef DEBUG
-      char str[64];
-      sprintf(str, "Adj times - on: %d:%d, off: %d:%d", on.tm_hour, on.tm_min, off.tm_hour, off.tm_min);
-      LOGDEBUGLN(str);
-#endif
     }
 
     // Turn light on or off
