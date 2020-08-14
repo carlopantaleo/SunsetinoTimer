@@ -32,7 +32,7 @@ public:
     void GetCoordinates(float &latitude, float &longitude);
     void SetCoordinates(const float &latitude, const float &longitude);
     TimerInterval GetTimerInterval(unsigned int num);
-    void SetTimerInterval(unsigned int num, const TimerInterval &timerInterval);
+    void SetTimerInterval(unsigned int num, TimerInterval timerInterval);
     void SaveConfiguration();
     void Reset();
 
@@ -98,7 +98,7 @@ TimerInterval PersistentConfiguration::GetTimerInterval(unsigned int num)
     return ti;
 }
 
-void PersistentConfiguration::SetTimerInterval(unsigned int num, const TimerInterval &timerInterval)
+void PersistentConfiguration::SetTimerInterval(unsigned int num, TimerInterval timerInterval)
 {
     if (num > NUM_INTERVALS)
         return;
