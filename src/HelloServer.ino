@@ -83,8 +83,11 @@ void manageLamp(time_t &rise, time_t &set)
     now.tm_min = timeClient.getMinutes();
     now.tm_hour = timeClient.getHours();
 
-    // Adjust intervals intersecting midnight (valid only for exact times)
-    if (ti.onType == EXACT && ti.offType == EXACT && compareTimes(on, off) < 0)
+    // Adjust intervals intersecting midnight (valid only for exact times and other few exceptions)
+    if (((ti.onType == EXACT && ti.offType == EXACT) ||
+         (ti.onType == SUNSET && ti.offType == EXACT) ||
+         (ti.onType == EXACT && ti.offType == SUNSET)) &&
+        compareTimes(on, off) < 0)
     {
       if (compareTimes(now, on) >= 0)
       {
