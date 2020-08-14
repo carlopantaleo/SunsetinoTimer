@@ -22,6 +22,7 @@ void setup()
   wifiManager.Setup();
   webServer.begin();
   timeClient.setUpdateInterval(NTP_UPDATE_INTERVAL);
+  timeClient.setTimeOffset(2 * 60 * 60);
   timeClient.begin();
 }
 
@@ -117,7 +118,7 @@ void setRiseSetTimes(time_t &rise, time_t &set)
 {
   float lat, lng; // lat: 44.3316998, lng: 7.4774379
   persistentConfiguration.GetCoordinates(lat, lng);
-  Sunclock sunclock(lat, lng);
+  Sunclock sunclock(lat, lng, 2);
   set = sunclock.sunset(timeClient.getEpochTime());
   rise = sunclock.sunrise(timeClient.getEpochTime());
   LOGDEBUG(F("Current time (GMT): "));
