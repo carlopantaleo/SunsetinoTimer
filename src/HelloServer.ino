@@ -64,9 +64,12 @@ std::tm getTime(const TimeType &type, const time_t &rise, const time_t &set, con
 
 int compareTimes(const std::tm &time1, const std::tm &time2)
 {
-  if (time1.tm_hour > time2.tm_hour && time1.tm_min > time2.tm_min)
+  int tm1 = time1.tm_hour * 60 + time1.tm_min,
+      tm2 = time2.tm_hour * 60 + time2.tm_min;
+
+  if (tm1 > tm2)
     return 1;
-  else if (time1.tm_hour < time2.tm_hour && time1.tm_min < time2.tm_min)
+  else if (tm1 < tm2)
     return -1;
   else
     return 0;
@@ -84,7 +87,7 @@ void manageLamp(time_t &rise, time_t &set)
     now.tm_hour = timeClient.getHours();
 
     // Adjust intervals intersecting midnight (valid only for exact times)
-    if (ti.onType == EXACT && ti.offType == EXACT && compareTimes(on, off) < 0)
+    if (ti.onType == EXACT && ti.offType == EXACT && compareTimes(on, off) > 0)
     {
       if (compareTimes(now, on) >= 0)
       {
@@ -93,6 +96,12 @@ void manageLamp(time_t &rise, time_t &set)
       }
       else if (compareTimes(now, off) <= 0)
         on = {0};
+
+      #ifdef DEBUG
+      char str[64];
+      sprintf(str, "Adj times - on: %d:%d, off: %d:%d", on.tm_hour, on.tm_min, off.tm_hour, off.tm_min);
+      LOGDEBUGLN(str);
+      #endif
     }
 
     // Turn light on or off
