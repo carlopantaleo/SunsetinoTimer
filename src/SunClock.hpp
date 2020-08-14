@@ -191,7 +191,7 @@ time_t Sunclock::sunrise(time_t date)
 
     double noon_decimal_day = (720 - 4 * longitude - _eq_of_time + tz_offset * 60) / 1440;
     double decimal_day = noon_decimal_day - _hour_angle_sunrise * 4 / 1440;
-    return time_from_decimal_day(date, decimal_day) - (time_t)(tz_offset * 60 * 60);
+    return time_from_decimal_day(date, decimal_day);
 }
 
 time_t Sunclock::solar_noon() { return solar_noon(time(0)); }
@@ -212,7 +212,7 @@ time_t Sunclock::solar_noon(time_t date)
     double _eq_of_time = eq_of_time(_var_y, _mean_long_sun, _eccent_earth_orbit, _mean_anom_sun);
 
     double decimal_day = (720 - 4 * longitude - _eq_of_time + tz_offset * 60) / 1440;
-    return time_from_decimal_day(date, decimal_day) - (time_t)(tz_offset * 60 * 60);
+    return time_from_decimal_day(date, decimal_day);
 }
 
 time_t Sunclock::sunset() { return sunset(time(0)); }
@@ -239,7 +239,7 @@ time_t Sunclock::sunset(time_t date)
 
     double noon_decimal_day = (720 - 4 * longitude - _eq_of_time + tz_offset * 60) / 1440;
     double decimal_day = noon_decimal_day + _hour_angle_sunrise * 4 / 1440;
-    return time_from_decimal_day(date, decimal_day) - (time_t)(tz_offset * 60 * 60);
+    return time_from_decimal_day(date, decimal_day);
 }
 
 double Sunclock::time_of_day(time_t date)
