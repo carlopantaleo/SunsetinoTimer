@@ -283,6 +283,7 @@ void WifiManager::OnSaveSettings()
     String s = F("<h1>Configuration saved.</h1><p>The device is going to reboot now.</p>");
     _webServer->send(200, F("text/html"), MakePage(F("Configuration saved"), s));
     _platformManager->Blink();
+    delay(1000);
     ESP.restart();
 }
 
