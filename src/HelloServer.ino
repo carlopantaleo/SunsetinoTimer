@@ -108,7 +108,9 @@ void manageLamp(time_t &rise, time_t &set)
 
 void setRiseSetTimes(time_t &rise, time_t &set)
 {
-  Sunclock sunclock(44.3316998, 7.4774379); // TODO: retrieve location from EEPROM
+  float lat, lng; // lat: 44.3316998, lng: 7.4774379
+  persistentConfiguration.GetCoordinates(lat, lng);
+  Sunclock sunclock(lat, lng);
   set = sunclock.sunset(timeClient.getEpochTime());
   rise = sunclock.sunrise(timeClient.getEpochTime());
   LOGDEBUG(F("Current time (GMT): "));
