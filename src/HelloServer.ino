@@ -2,15 +2,17 @@
 #include "SunClock.hpp"
 #include <WiFiUdp.h>
 #include "NTPClient.hpp"
+#include "EventLogger.hpp"
 #include "debug.h"
 #include "constants.h"
 
 WiFiUDP ntpUDP;
 NTPClient timeClient(ntpUDP);
 ESP8266WebServer webServer(80);
-PlatformManager platformManager(D4, D1);
+EventLogger eventLogger(&timeClient);
+PlatformManager platformManager(D4, D1, &eventLogger);
 PersistentConfiguration persistentConfiguration;
-WifiManager wifiManager(&webServer, &platformManager, &persistentConfiguration, &timeClient);
+WifiManager wifiManager(&webServer, &platformManager, &persistentConfiguration, &timeClient, &eventLogger);
 
 void setup()
 {

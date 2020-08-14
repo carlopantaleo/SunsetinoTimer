@@ -10,6 +10,7 @@
 #include "PlatformManager.hpp"
 #include "PersistentConfiguration.hpp"
 #include "NTPClient.hpp"
+#include "EventLogger.hpp"
 #include "debug.h"
 
 class WifiManager
@@ -25,6 +26,7 @@ private:
     PlatformManager *const _platformManager;
     PersistentConfiguration *const _persistentConfiguration;
     NTPClient *const _timeClient;
+    EventLogger *const _eventLogger;
 
     boolean RestoreConfig();
     void ConfigureWebServer();
@@ -40,7 +42,8 @@ public:
     WifiManager(ESP8266WebServer *webServer,
                 PlatformManager *platformManager,
                 PersistentConfiguration *persistentConfiguration,
-                NTPClient *timeClient);
+                NTPClient *timeClient,
+                EventLogger *eventLogger);
     ~WifiManager();
     void Setup();
     void HandleClient();
@@ -52,12 +55,14 @@ public:
 WifiManager::WifiManager(ESP8266WebServer *webServer,
                          PlatformManager *platformManager,
                          PersistentConfiguration *persistentConfiguration,
-                         NTPClient *timeClient)
+                         NTPClient *timeClient,
+                         EventLogger *eventLogger)
     : _apIP(192, 168, 1, 1),
       _webServer(webServer),
       _platformManager(platformManager),
       _persistentConfiguration(persistentConfiguration),
-      _timeClient(timeClient)
+      _timeClient(timeClient),
+      _eventLogger(eventLogger)
 {
 }
 
@@ -212,6 +217,8 @@ void WifiManager::OnSettings()
 )=" + intervals + R"=(
     <input type="submit"/>
 </form>
+<h4>Events</h4>
+<pre>)=" + _eventLogger->PrintEvents() + R"=(</pre>
  )=";
         _webServer->send(200, F("text/html"), MakePage(F("Platform Settings"), s));
     }

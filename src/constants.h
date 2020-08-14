@@ -7,4 +7,8 @@
 #define NUM_INTERVALS 4
 #endif
 
+#ifndef NUM_EVENTS
+#define NUM_EVENTS 50
+#endif
+
 #endif
