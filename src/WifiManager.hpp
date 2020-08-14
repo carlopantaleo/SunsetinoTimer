@@ -46,6 +46,7 @@ public:
     void HandleClient();
     bool CheckConnection();
     bool IsSetupMode();
+    void WifiHousekeeping(bool forceReset = false);
 };
 
 WifiManager::WifiManager(ESP8266WebServer *webServer,
@@ -324,6 +325,49 @@ void WifiManager::SetupMode()
     LOGDEBUG(F("Starting Access Point at \""));
     LOGDEBUG(_apSSID);
     LOGDEBUGLN("\"");
+}
+
+void WifiManager::WifiHousekeeping(bool forceReset)
+{
+    static unsigned long lastConnection = 0;
+    if (forceReset)
+        lastConnection = millis(); // Force reconnect
+
+    // Connections will be kept alive for 10 minutes, then WiFi will be turned off for power saving.
+    if (millis() - lastConnection < 10 * 60 * 1000)
+    {
+        // Awake WiFi if it was sleeping
+        if (WiFi.getMode() == WIFI_OFF)
+        {
+            LOGDEBUGLN(F("Waking WiFi up"));
+            WiFi.forceSleepWake();
+            delay(1);
+            WiFi.mode(WIFI_STA);
+            WiFi.begin();
+            lastConnection = millis();
+        }
+
+        if (!CheckConnection())
+        {
+            _platformManager->Blink(10, 50);
+            lastConnection = millis(); // Reset last connection timer
+        }
+        else
+        {
+            _platformManager->Blink(5);
+        }
+    }
+    else
+    {
+        // Put WiFi to sleep only if in STA mode
+        if (WiFi.getMode() == WIFI_STA)
+        {
+            LOGDEBUGLN(F("Putting WiFi to sleep."));
+            WiFi.mode(WIFI_OFF);
+            WiFi.forceSleepBegin();
+            delay(1);
+        }
+    }
 }
 
 String WifiManager::MakePage(String title, String contents)

@@ -124,49 +124,6 @@ void setRiseSetTimes(time_t &rise, time_t &set)
   printTime(rise);
 }
 
-void wifiHousekeeping(bool forceReset = false)
-{
-  static unsigned long lastConnection = 0;
-  if (forceReset)
-    lastConnection = millis(); // Force reconnect
-
-  // Connections will be kept alive for 10 minutes, then WiFi will be turned off for power saving.
-  if (millis() - lastConnection < 10 * 60 * 1000)
-  {
-    // Awake WiFi if it was sleeping
-    if (WiFi.getMode() == WIFI_OFF)
-    {
-      LOGDEBUGLN(F("Waking WiFi up"));
-      WiFi.forceSleepWake();
-      delay(1);
-      WiFi.mode(WIFI_STA);
-      WiFi.begin();
-      lastConnection = millis();
-    }
-
-    if (!wifiManager.CheckConnection())
-    {
-      platformManager.Blink(10, 50);
-      lastConnection = millis(); // Reset last connection timer
-    }
-    else
-    {
-      platformManager.Blink(5);
-    }
-  }
-  else
-  {
-    // Put WiFi to sleep only if in STA mode
-    if (WiFi.getMode() == WIFI_STA)
-    {
-      LOGDEBUGLN(F("Putting WiFi to sleep."));
-      WiFi.mode(WIFI_OFF);
-      WiFi.forceSleepBegin();
-      delay(1);
-    }
-  }
-}
-
 void houseKeeping()
 {
   wifiManager.HandleClient();
@@ -179,11 +136,11 @@ void houseKeeping()
   else if (!timeClient.update())
   {
     platformManager.Blink(3, 500);
-    wifiHousekeeping(true);
+    wifiManager.WifiHousekeeping(true);
   }
   else
   {
-    wifiHousekeeping();
+    wifiManager.WifiHousekeeping();
     platformManager.Blink();
   }
 }
