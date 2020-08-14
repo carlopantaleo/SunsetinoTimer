@@ -100,7 +100,10 @@ void manageLamp(time_t &rise, time_t &set)
 
     // Turn light on or off
     if (compareTimes(now, on) >= 0 && compareTimes(now, off) <= 0)
+    {
       platformManager.LampOn();
+      break;
+    }
     else
       platformManager.LampOff();
   }
