@@ -29,7 +29,7 @@ void EventLogger::LogEvent(const String &event)
 {
     long now = (long) _ntpClient->getEpochTime();
     std::tm dayNow = *std::localtime(&now);
-    String log = String(dayNow.tm_mday) + "/" + String(dayNow.tm_mon) + "/" + String(dayNow.tm_year + 1900) + " " +
+    String log = String(dayNow.tm_mday) + "/" + String(dayNow.tm_mon + 1) + "/" + String(dayNow.tm_year + 1900) + " " +
                  _ntpClient->getFormattedTime() + " " + event;
     _events.push_back(log);
     LOGDEBUGLN(log);
