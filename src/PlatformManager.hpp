@@ -18,6 +18,7 @@ public:
     PlatformManager(uint8_t builtinLed, uint8_t lampPin, EventLogger *eventLogger);
     void LampOn();
     void LampOff();
+    void BlinkOn();
     void Blink(int repeat = 1, int duration = 50);
 };
 
@@ -42,6 +43,11 @@ void PlatformManager::LampOff()
     _lampState = LOW;
     digitalWrite(_builtinLed, (_lampState + 1) % 2);
     digitalWrite(_lampPin, _lampState);
+}
+
+void PlatformManager::BlinkOn()
+{
+    digitalWrite(_builtinLed, _lampState);
 }
 
 void PlatformManager::Blink(int repeat, int duration)

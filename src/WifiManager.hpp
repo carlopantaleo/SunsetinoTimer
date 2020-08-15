@@ -350,6 +350,9 @@ void WifiManager::SetupMode()
 
 void WifiManager::WifiHousekeeping()
 {
+    if (_isSetupMode)
+        return;
+
     if (_forceReset)
     {
         _lastConnection = millis(); // Force reconnect

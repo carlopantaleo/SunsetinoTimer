@@ -6,6 +6,8 @@
 #include "debug.h"
 #include "constants.h"
 
+// PINS - D4: builtin led, D1: lamp relay, D3: WiFi on interrupt
+
 WiFiUDP ntpUDP;
 NTPClient timeClient(ntpUDP);
 ESP8266WebServer webServer(80);
@@ -19,11 +21,13 @@ void setup()
   Serial.begin(115200);
   pinMode(D4, OUTPUT);
   pinMode(D1, OUTPUT);
+  pinMode(D3, INPUT_PULLUP);
   wifiManager.Setup();
   webServer.begin();
   timeClient.setUpdateInterval(NTP_UPDATE_INTERVAL);
   timeClient.setTimeOffset((int) persistentConfiguration.GetTimezoneOffset() * 60 * 60);
   timeClient.begin();
+  attachInterrupt(digitalPinToInterrupt(D3), wifiOnISR, FALLING);
 }
 
 void loop()
@@ -147,6 +151,23 @@ void houseKeeping()
   }
 
   wifiManager.WifiHousekeeping();
+}
+
+ICACHE_RAM_ATTR void wifiOnISR()
+{
+  // Debounce
+  static unsigned long lastInterruptTime = 0;
+  if (millis() - lastInterruptTime < 10000)
+    return;
+  lastInterruptTime = millis();
+
+  // Do the thing
+  if (!wifiManager.IsWifiOn())
+  {
+    wifiManager.TurnWifiOn();
+    platformManager.BlinkOn();
+    eventLogger.LogEvent(F("Requested WiFi ON."));
+  }
 }
 
 /**
