@@ -49,7 +49,7 @@ void loop()
 
   manageLamp(rise, set);
 
-  delay(10000);
+  delay(wifiManager.IsWifiOn() ? 500 : 10000);
 }
 
 std::tm getTime(const TimeType &type, const time_t &rise, const time_t &set, const std::tm &exactTime)
@@ -139,13 +139,14 @@ void houseKeeping()
   else if (!timeClient.update())
   {
     platformManager.Blink(3, 500);
-    wifiManager.WifiHousekeeping(true);
+    wifiManager.TurnWifiOn();
   }
   else
   {
-    wifiManager.WifiHousekeeping();
     platformManager.Blink();
   }
+
+  wifiManager.WifiHousekeeping();
 }
 
 /**

@@ -21,6 +21,7 @@ private:
     const char *_apSSID = "SunsetinoTimer";
     boolean _isSetupMode = false;
     unsigned long _lastConnection = 0;
+    bool _forceReset = false;
     String _ssidList;
     DNSServer _dnsServer;
     ESP8266WebServer *const _webServer;
@@ -51,7 +52,8 @@ public:
     bool CheckConnection();
     bool IsSetupMode();
     boolean IsWifiOn();
-    void WifiHousekeeping(bool forceReset = false);
+    void TurnWifiOn();
+    void WifiHousekeeping();
 };
 
 WifiManager::WifiManager(ESP8266WebServer *webServer,
@@ -346,10 +348,13 @@ void WifiManager::SetupMode()
     LOGDEBUGLN("\"");
 }
 
-void WifiManager::WifiHousekeeping(bool forceReset)
+void WifiManager::WifiHousekeeping()
 {
-    if (forceReset)
+    if (_forceReset)
+    {
         _lastConnection = millis(); // Force reconnect
+        _forceReset = false;
+    }
 
     if (IsWifiOn())
     {
@@ -391,6 +396,11 @@ boolean WifiManager::IsWifiOn()
 {
     // Connections are kept alive for 10 minutes, then WiFi will be turned off for power saving.
     return millis() - _lastConnection < 10 * 60 * 1000;
+}
+
+void WifiManager::TurnWifiOn()
+{
+    _forceReset = true;
 }
 
 String WifiManager::MakePage(String title, String contents)
