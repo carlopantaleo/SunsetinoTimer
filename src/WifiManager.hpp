@@ -168,8 +168,10 @@ void WifiManager::OnSettings()
         for (int i = 0; i < NUM_INTERVALS; i++)
         {
             TimerInterval intv = _persistentConfiguration->GetTimerInterval(i);
-            String strOn = String(intv.on.tm_hour) + ":" + String(intv.on.tm_min);
-            String strOff = String(intv.off.tm_hour) + ":" + String(intv.off.tm_min);
+            String strOn = (intv.on.tm_hour < 10 ? "0" : "") + String(intv.on.tm_hour) + ":" +
+                           (intv.on.tm_min < 10 ? "0" : "") + String(intv.on.tm_min);
+            String strOff = (intv.off.tm_hour < 10 ? "0" : "") + String(intv.off.tm_hour) + ":" +
+                            (intv.off.tm_min < 10 ? "0" : "") + String(intv.off.tm_min);
 
             intervals += "<h4>Interval " + String(i+1) + "</h4>"
                          "<p>"
@@ -198,7 +200,7 @@ void WifiManager::OnSettings()
 <style>
     .label {
         display: inline-block;
-        width: 100px;
+        width: 150px;
     }
 </style>
 <h1>Platform settings</h1>
@@ -214,6 +216,11 @@ void WifiManager::OnSettings()
         <label for="lng" class="label">Longitude</label>
         <input type="number" step="any" name="lng" id="lng" value=")=" +
                    String(lng, 7) + R"=(">
+    </p>
+    <p>
+        <label for="tzoff" class="label">Timezone Offset</label>
+        <input type="number" step="0.5" name="tzoff" id="tzoff" value=")=" +
+                   String(_persistentConfiguration->GetTimezoneOffset(), 1) + R"=(">
     </p>
     <br/>
 )=" + intervals + R"=(
@@ -258,6 +265,10 @@ void WifiManager::OnSaveSettings()
     _persistentConfiguration->GetCoordinates(lat, lng);
     LOGDEBUGLN("Lat: " + String(lat, 7) + "; Lng: " + String(lng, 7))
     #endif
+
+    float tzOffset = atof(UrlDecode(_webServer->arg(F("tzoff"))).c_str());
+    _persistentConfiguration->SetTimezoneOffset(tzOffset);
+    LOGDEBUGLN("Timezone offset: " + String(tzOffset, 1));
 
     for (int i = 0; i < NUM_INTERVALS; i++)
     {

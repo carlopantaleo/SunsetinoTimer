@@ -31,6 +31,8 @@ public:
     void SetPassword(const String &password);
     void GetCoordinates(float &latitude, float &longitude);
     void SetCoordinates(const float &latitude, const float &longitude);
+    float GetTimezoneOffset();
+    void SetTimezoneOffset(const float &tzOffset);
     TimerInterval GetTimerInterval(unsigned int num);
     void SetTimerInterval(unsigned int num, TimerInterval timerInterval);
     void SaveConfiguration();
@@ -43,6 +45,7 @@ private:
         char password[64 + 1];
         float latitude;
         float longitude;
+        float tzOffset;
         TimerInterval timerIntervals[NUM_INTERVALS];
     } _conf;
 };
@@ -85,6 +88,16 @@ void PersistentConfiguration::SetCoordinates(const float &latitude, const float 
 {
     _conf.latitude = latitude;
     _conf.longitude = longitude;
+}
+
+float PersistentConfiguration::GetTimezoneOffset()
+{
+    return _conf.tzOffset;
+}
+
+void PersistentConfiguration::SetTimezoneOffset(const float &tzOffset)
+{
+    _conf.tzOffset = tzOffset;
 }
 
 TimerInterval PersistentConfiguration::GetTimerInterval(unsigned int num)
