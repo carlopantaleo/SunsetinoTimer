@@ -31,7 +31,7 @@ void EventLogger::LogEvent(const String &event)
     LOGDEBUGLN(log);
 
     if (_events.size() > NUM_EVENTS)
-        _events.pop_back();
+        _events.pop_front();
 }
 
 String EventLogger::PrintEvents()
