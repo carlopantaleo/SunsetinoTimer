@@ -20,6 +20,7 @@ private:
     const IPAddress _apIP;
     const char *_apSSID = "SunsetinoTimer";
     boolean _isSetupMode = false;
+    unsigned long _lastConnection = 0;
     String _ssidList;
     DNSServer _dnsServer;
     ESP8266WebServer *const _webServer;
@@ -49,6 +50,7 @@ public:
     void HandleClient();
     bool CheckConnection();
     bool IsSetupMode();
+    boolean IsWifiOn();
     void WifiHousekeeping(bool forceReset = false);
 };
 
@@ -335,28 +337,26 @@ void WifiManager::SetupMode()
 
 void WifiManager::WifiHousekeeping(bool forceReset)
 {
-    static unsigned long lastConnection = 0;
     if (forceReset)
-        lastConnection = millis(); // Force reconnect
+        _lastConnection = millis(); // Force reconnect
 
-    // Connections will be kept alive for 10 minutes, then WiFi will be turned off for power saving.
-    if (millis() - lastConnection < 10 * 60 * 1000)
+    if (IsWifiOn())
     {
         // Awake WiFi if it was sleeping
         if (WiFi.getMode() == WIFI_OFF)
         {
-            LOGDEBUGLN(F("Waking WiFi up"));
+            _eventLogger->LogEvent(F("WiFi active."));
             WiFi.forceSleepWake();
             delay(1);
             WiFi.mode(WIFI_STA);
             WiFi.begin();
-            lastConnection = millis();
+            _lastConnection = millis();
         }
 
         if (!CheckConnection())
         {
             _platformManager->Blink(10, 50);
-            lastConnection = millis(); // Reset last connection timer
+            _lastConnection = millis(); // Reset last connection timer
         }
         else
         {
@@ -368,12 +368,18 @@ void WifiManager::WifiHousekeeping(bool forceReset)
         // Put WiFi to sleep only if in STA mode
         if (WiFi.getMode() == WIFI_STA)
         {
-            LOGDEBUGLN(F("Putting WiFi to sleep."));
+            _eventLogger->LogEvent(F("WiFi inactive."));
             WiFi.mode(WIFI_OFF);
             WiFi.forceSleepBegin();
             delay(1);
         }
     }
+}
+
+boolean WifiManager::IsWifiOn()
+{
+    // Connections are kept alive for 10 minutes, then WiFi will be turned off for power saving.
+    return millis() - _lastConnection < 10 * 60 * 1000;
 }
 
 String WifiManager::MakePage(String title, String contents)

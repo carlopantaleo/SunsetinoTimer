@@ -5,6 +5,7 @@
 #include <Arduino.h>
 #include "NTPClient.hpp"
 #include "constants.h"
+#include "debug.h"
 
 class EventLogger
 {
@@ -27,6 +28,7 @@ void EventLogger::LogEvent(const String &event)
 {
     String log = _ntpClient->getFormattedTime() + " " + event;
     _events.push_back(log);
+    LOGDEBUGLN(log);
 
     if (_events.size() > NUM_EVENTS)
         _events.pop_back();
