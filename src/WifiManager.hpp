@@ -288,11 +288,10 @@ void WifiManager::OnSaveSettings()
         _persistentConfiguration->SetTimerInterval(i, ti);
     }
     _persistentConfiguration->SaveConfiguration();
-    String s = F("<h1>Configuration saved.</h1><p>The device is going to reboot now.</p>");
+    String s = F("<h1>Configuration saved.</h1><p><a href=\"/\">Go back to settings.</a></p>");
     _webServer->send(200, F("text/html"), MakePage(F("Configuration saved"), s));
+    _eventLogger->LogEvent(F("Configuration changed."));
     _platformManager->Blink();
-    delay(1000);
-    ESP.restart();
 }
 
 void WifiManager::OnReset()
