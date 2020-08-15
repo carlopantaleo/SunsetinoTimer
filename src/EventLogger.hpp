@@ -3,6 +3,7 @@
 
 #include <deque>
 #include <Arduino.h>
+#include <ctime>
 #include "NTPClient.hpp"
 #include "constants.h"
 #include "debug.h"
@@ -26,7 +27,10 @@ EventLogger::EventLogger(NTPClient *const ntpClient)
 
 void EventLogger::LogEvent(const String &event)
 {
-    String log = _ntpClient->getFormattedTime() + " " + event;
+    long now = (long) _ntpClient->getEpochTime();
+    std::tm dayNow = *std::localtime(&now);
+    String log = String(dayNow.tm_mday) + "/" + String(dayNow.tm_mon) + "/" + String(dayNow.tm_year + 1900) + " " +
+                 _ntpClient->getFormattedTime() + " " + event;
     _events.push_back(log);
     LOGDEBUGLN(log);
 
