@@ -70,16 +70,16 @@ class NTPClient {
      * This should be called in the main loop of your application. By default an update from the NTP Server is only
      * made every 60 seconds. This can be configured in the NTPClient constructor.
      *
-     * @return true on success, false on failure
+     * @return 1 on success, 2 on success and sync, 0 on failure
      */
-    bool update();
+    int update();
 
     /**
      * This will force the update from the NTP Server.
      *
-     * @return true on success, false on failure
+     * @return 1 on success, 2 on success and sync, 0 on failure
      */
-    bool forceUpdate();
+    int forceUpdate();
 
     int getDay();
     int getHours();
@@ -153,7 +153,7 @@ void NTPClient::begin(int port) {
   this->_udpSetup = true;
 }
 
-bool NTPClient::forceUpdate() {
+int NTPClient::forceUpdate() {
   #ifdef DEBUG_NTPClient
     Serial.println("Update from NTP Server");
   #endif
@@ -170,7 +170,7 @@ bool NTPClient::forceUpdate() {
   do {
     delay ( 10 );
     cb = this->_udp->parsePacket();
-    if (timeout > 100) return false; // timeout after 1000 ms
+    if (timeout > 100) return 0; // timeout after 1000 ms
     timeout++;
   } while (cb == 0);
 
@@ -186,16 +186,16 @@ bool NTPClient::forceUpdate() {
 
   this->_currentEpoc = secsSince1900 - SEVENZYYEARS;
 
-  return true;
+  return 2;
 }
 
-bool NTPClient::update() {
+int NTPClient::update() {
   if ((millis() - this->_lastUpdate >= this->_updateInterval)     // Update after _updateInterval
     || this->_lastUpdate == 0) {                                // Update if there was no update yet.
     if (!this->_udpSetup) this->begin();                         // setup the UDP client if needed
     return this->forceUpdate();
   }
-  return true;
+  return 1;
 }
 
 unsigned long NTPClient::getEpochTime() {

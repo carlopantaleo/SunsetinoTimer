@@ -18,7 +18,7 @@ WifiManager wifiManager(&webServer, &platformManager, &persistentConfiguration, 
 
 void setup()
 {
-  Serial.begin(115200);
+  Serial.begin(9600);
   pinMode(D4, OUTPUT);
   pinMode(D1, OUTPUT);
   pinMode(D3, INPUT_PULLUP);
@@ -140,14 +140,22 @@ void houseKeeping()
   {
     platformManager.Blink(1, 500);
   }
-  else if (!timeClient.update())
-  {
-    platformManager.Blink(3, 500);
-    wifiManager.TurnWifiOn();
-  }
   else
   {
-    platformManager.Blink();
+    int tcUpdate = timeClient.update();
+    if (tcUpdate == 0)
+    {
+      platformManager.Blink(3, 500);
+      wifiManager.TurnWifiOn();
+    }
+    else if (tcUpdate == 2)
+    {
+      eventLogger.LogEvent(F("RTC synced."));
+    }
+    else
+    {
+      platformManager.Blink();
+    }
   }
 
   wifiManager.WifiHousekeeping();
