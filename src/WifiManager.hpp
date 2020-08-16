@@ -374,8 +374,7 @@ void WifiManager::WifiHousekeeping()
 
         if (!CheckConnection())
         {
-            _platformManager->Blink(10, 50);
-            _lastConnection = millis(); // Reset last connection timer
+            _platformManager->Blink(50, 50);
         }
         else
         {
