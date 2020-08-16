@@ -142,19 +142,18 @@ void houseKeeping()
   }
   else
   {
-    int tcUpdate = timeClient.update();
-    if (tcUpdate == 0)
+    switch (timeClient.update())
     {
+    case 0:
       platformManager.Blink(3, 500);
       wifiManager.TurnWifiOn();
-    }
-    else if (tcUpdate == 2)
-    {
+      break;
+    case 2:
       eventLogger.LogEvent(F("RTC synced."));
-    }
-    else
-    {
+      break;
+    default:
       platformManager.Blink();
+      break;
     }
   }
 

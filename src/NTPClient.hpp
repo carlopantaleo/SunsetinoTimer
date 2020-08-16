@@ -24,6 +24,7 @@
 #define NTPCLIENT_HPP
 
 #include "Arduino.h"
+#include "debug.h"
 
 #include <Udp.h>
 
@@ -154,9 +155,7 @@ void NTPClient::begin(int port) {
 }
 
 int NTPClient::forceUpdate() {
-  #ifdef DEBUG_NTPClient
-    Serial.println("Update from NTP Server");
-  #endif
+  LOGDEBUGLN(F("Update from NTP Server"));
 
   // Clear eventual previous buffered packets which have timed out
   while (this->_udp->parsePacket());
