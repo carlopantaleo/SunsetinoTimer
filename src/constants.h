@@ -8,7 +8,7 @@
 #endif
 
 #ifndef NUM_EVENTS
-#define NUM_EVENTS 50
+#define NUM_EVENTS 100
 #endif
 
 #endif
