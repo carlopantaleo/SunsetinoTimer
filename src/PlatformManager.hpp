@@ -4,6 +4,14 @@
 #include <ESP8266WiFi.h>
 #include "EventLogger.hpp"
 
+#ifdef BUILTIN_LED_ON_WITH_LAMP
+#define BUILTIN_LED_ON (_lampState + 1) % 2
+#define BUILTIN_LED_OFF _lampState
+#else
+#define BUILTIN_LED_ON LOW
+#define BUILTIN_LED_OFF HIGH
+#endif
+
 typedef uint8_t LampState;
 
 class PlatformManager
@@ -31,7 +39,9 @@ void PlatformManager::LampOn()
         _eventLogger->LogEvent(F("Lamp ON."));
 
     _lampState = HIGH;
+#ifdef BUILTIN_LED_ON_WITH_LAMP
     digitalWrite(_builtinLed, (_lampState + 1) % 2);
+#endif
     digitalWrite(_lampPin, _lampState);
 }
 
@@ -41,22 +51,24 @@ void PlatformManager::LampOff()
         _eventLogger->LogEvent(F("Lamp OFF."));
 
     _lampState = LOW;
+#ifdef BUILTIN_LED_ON_WITH_LAMP
     digitalWrite(_builtinLed, (_lampState + 1) % 2);
+#endif
     digitalWrite(_lampPin, _lampState);
 }
 
 void PlatformManager::BlinkOn()
 {
-    digitalWrite(_builtinLed, _lampState);
+    digitalWrite(_builtinLed, BUILTIN_LED_ON);
 }
 
 void PlatformManager::Blink(int repeat, int duration)
 {
     for (int i = 0; i < repeat; i++)
     {
-        digitalWrite(_builtinLed, _lampState);
+        digitalWrite(_builtinLed, BUILTIN_LED_ON);
         delay(duration);
-        digitalWrite(_builtinLed, (_lampState + 1) % 2);
+        digitalWrite(_builtinLed, BUILTIN_LED_OFF);
         delay(duration);
     }
 }
