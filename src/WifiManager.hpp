@@ -260,6 +260,8 @@ void WifiManager::OnSetAp()
 void WifiManager::OnSaveSettings()
 {
     _platformManager->Blink();
+
+    // Coordinates
     _persistentConfiguration->SetCoordinates(
         atof(UrlDecode(_webServer->arg(F("lat"))).c_str()), atof(UrlDecode(_webServer->arg(F("lng"))).c_str()));
     #ifdef DEBUG
@@ -268,10 +270,13 @@ void WifiManager::OnSaveSettings()
     LOGDEBUGLN("Lat: " + String(lat, 7) + "; Lng: " + String(lng, 7))
     #endif
 
+    // Timezone offset
     float tzOffset = atof(UrlDecode(_webServer->arg(F("tzoff"))).c_str());
     _persistentConfiguration->SetTimezoneOffset(tzOffset);
+    _timeClient->setTimeOffset(tzOffset * 60 * 60);
     LOGDEBUGLN("Timezone offset: " + String(tzOffset, 1));
 
+    // Intervals
     for (int i = 0; i < NUM_INTERVALS; i++)
     {
         TimerInterval ti = {0};
@@ -302,6 +307,7 @@ void WifiManager::OnSaveSettings()
 
         _persistentConfiguration->SetTimerInterval(i, ti);
     }
+    
     _persistentConfiguration->SaveConfiguration();
     String s = F("<h1>Configuration saved.</h1><p><a href=\"/\">Go back to settings.</a></p>");
     _webServer->send(200, F("text/html"), MakePage(F("Configuration saved"), s));
