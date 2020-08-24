@@ -25,7 +25,7 @@ void setup()
   wifiManager.Setup();
   webServer.begin();
   timeClient.setUpdateInterval(NTP_UPDATE_INTERVAL);
-  timeClient.setTimeOffset((int) persistentConfiguration.GetTimezoneOffset() * 60 * 60);
+  timeClient.setTimeOffset((int)persistentConfiguration.GetTimezoneOffset() * 60 * 60);
   timeClient.begin();
   attachInterrupt(digitalPinToInterrupt(D3), wifiOnISR, FALLING);
 }
@@ -84,6 +84,8 @@ int compareTimes(const std::tm &time1, const std::tm &time2)
 
 void manageLamp(time_t &rise, time_t &set)
 {
+  bool lampState = false;
+
   for (int i = 0; i < NUM_INTERVALS; i++)
   {
     TimerInterval ti = persistentConfiguration.GetTimerInterval(i);
@@ -107,15 +109,15 @@ void manageLamp(time_t &rise, time_t &set)
         on = {0};
     }
 
-    // Turn light on or off
-    if (compareTimes(now, on) >= 0 && compareTimes(now, off) <= 0)
-    {
-      platformManager.LampOn();
-      break;
-    }
-    else
-      platformManager.LampOff();
+    // Set lamp state: ON state (true) is privileged
+    lampState = lampState || (compareTimes(now, on) >= 0 && compareTimes(now, off) <= 0);
   }
+
+  // Turn light on or off
+  if (lampState)
+    platformManager.LampOn();
+  else
+    platformManager.LampOff();
 }
 
 void setRiseSetTimes(time_t &rise, time_t &set)
