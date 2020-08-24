@@ -12,12 +12,15 @@
 #define BUILTIN_LED_OFF HIGH
 #endif
 
+#define LAMP_ON LOW
+#define LAMP_OFF HIGH
+
 typedef uint8_t LampState;
 
 class PlatformManager
 {
 private:
-    LampState _lampState = LOW;
+    LampState _lampState = LAMP_OFF;
     uint8_t _builtinLed; // Its status will be the opposite of _lampState in order to be on when lamp is on
     uint8_t _lampPin;
     EventLogger *const _eventLogger;
@@ -35,10 +38,10 @@ PlatformManager::PlatformManager(uint8_t builtinLed, uint8_t lampPin, EventLogge
 
 void PlatformManager::LampOn()
 {
-    if (_lampState == LOW)
+    if (_lampState == LAMP_OFF)
         _eventLogger->LogEvent(F("Lamp ON."));
 
-    _lampState = HIGH;
+    _lampState = LAMP_ON;
 #ifdef BUILTIN_LED_ON_WITH_LAMP
     digitalWrite(_builtinLed, (_lampState + 1) % 2);
 #endif
@@ -47,10 +50,10 @@ void PlatformManager::LampOn()
 
 void PlatformManager::LampOff()
 {
-    if (_lampState == HIGH)
+    if (_lampState == LAMP_ON)
         _eventLogger->LogEvent(F("Lamp OFF."));
 
-    _lampState = LOW;
+    _lampState = LAMP_OFF;
 #ifdef BUILTIN_LED_ON_WITH_LAMP
     digitalWrite(_builtinLed, (_lampState + 1) % 2);
 #endif
