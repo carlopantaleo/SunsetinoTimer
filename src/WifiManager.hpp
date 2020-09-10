@@ -16,7 +16,7 @@
 class WifiManager
 {
 private:
-    static const int MAX_CONNECTION_ATTEMPTS = 20;
+    static const int MAX_CONNECTION_ATTEMPTS = 100;
     const IPAddress _apIP;
     const char *_apSSID = "SunsetinoTimer";
     boolean _isSetupMode = false;
