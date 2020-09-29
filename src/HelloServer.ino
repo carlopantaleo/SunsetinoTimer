@@ -71,8 +71,8 @@ std::tm getTime(const TimeType &type, const time_t &rise, const time_t &set, con
 
 int compareTimes(const std::tm &time1, const std::tm &time2)
 {
-  int tm1 = time1.tm_hour * 60 + time1.tm_min,
-      tm2 = time2.tm_hour * 60 + time2.tm_min;
+  int tm1 = time1.tm_hour * 60 * 60 + time1.tm_min * 60 + time1.tm_sec,
+      tm2 = time2.tm_hour * 60 * 60 + time2.tm_min * 60 + time2.tm_sec;
 
   if (tm1 > tm2)
     return 1;
@@ -102,6 +102,7 @@ void manageLamp(time_t &rise, time_t &set)
     {
       if (compareTimes(now, on) >= 0)
       {
+        off.tm_sec = 59;
         off.tm_min = 59;
         off.tm_hour = 23;
       }
