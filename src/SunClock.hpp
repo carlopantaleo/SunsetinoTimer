@@ -368,7 +368,7 @@ double Sunclock::hour_angle(double _true_solar_time)
 
 double Sunclock::hour_angle_sunrise(double _declination)
 {
-    return deg(acos(cos(rad(94)) / (cos(rad(latitude)) * cos(rad(_declination))) - tan(rad(latitude)) * tan(rad(_declination))));
+    return deg(acos(cos(rad(96)) / (cos(rad(latitude)) * cos(rad(_declination))) - tan(rad(latitude)) * tan(rad(_declination))));
 }
 
 double Sunclock::solar_zenith(double _declination, double _hour_angle)
