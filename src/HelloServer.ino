@@ -94,23 +94,17 @@ void manageLamp(time_t &rise, time_t &set)
     std::tm now;
     now.tm_min = timeClient.getMinutes();
     now.tm_hour = timeClient.getHours();
+    now.tm_sec = timeClient.getSeconds();
 
-    // Adjust intervals intersecting midnight (valid only for exact times)
-    if (((ti.onType == EXACT && ti.offType == EXACT) ||
-         (ti.onType == SUNSET && ti.offType == EXACT)) &&
-        compareTimes(on, off) > 0)
+    // Handle edge case of off time = midnight
+    if (!off.tm_hour && !off.tm_min && (on.tm_hour || on.tm_min))
     {
-      if (compareTimes(now, on) >= 0)
-      {
-        off.tm_sec = 59;
-        off.tm_min = 59;
-        off.tm_hour = 23;
-      }
-      else
-        on = {0};
+      off.tm_hour = 23;
+      off.tm_min = 59;
+      off.tm_sec = 59;
     }
 
-    // Set lamp state: ON state (true) is privileged
+    // Set lamp state: ON state (true) is privileged and off time is intentionally inclusive
     lampState = lampState || (compareTimes(now, on) >= 0 && compareTimes(now, off) <= 0);
   }
 
